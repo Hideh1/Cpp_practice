@@ -1,0 +1,162 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+class Employee
+{
+    protected:
+        string name;
+        int age;
+
+        string position;    // 직책(이름)
+        int rank;           // 순위
+
+    public:
+        Employee(string name, int age, string position, int rank)
+            :name(name) , age(age) , position(position) , rank(rank) {}
+
+        Employee(const Employee& employee)
+        {
+            name=  employee.name;
+            age = employee.age;
+            position = employee.position;
+            rank = employee.rank;
+        } 
+
+        Employee(){}
+
+        virtual void print_info()
+        {
+            cout << name << " ( " << position << ", " << age << " ) ==> " << cal_pay() << endl;
+
+        }
+
+        virtual int cal_pay()
+        {
+            return 200+rank*50;
+        }
+
+};
+
+class Manage : public Employee
+{
+    int year_of_service;
+
+    public:
+        Manage(string name, int age, string position, int rank , int year_of_service)
+            : Employee(name, age , position , rank) , year_of_service(year_of_service) {}
+
+        Manage(const Manage& manager)
+            :   Employee(manager.name , manager.age , manager.position , manager.rank)
+            {
+                year_of_service = manager.year_of_service;
+            }
+        Manage() : Employee() {}
+
+
+    int cal_pay() override
+    {
+         return 200+rank*50 + year_of_service* 40;
+    }
+
+    void print_info() override
+    {
+        cout << name << " ( " << position << ", " << age <<',' << year_of_service << "years ) ==> " << cal_pay() << endl;    
+
+    }
+
+
+};
+
+
+class EmployeeList
+{
+    int alloc_employee; // 할당된 직원수
+    int current_employee; // 실제 직원수
+
+
+    Employee** employee_list; // EMployee* 를 담을 배열
+
+    public:
+        EmployeeList(int alloc_employee) : alloc_employee(alloc_employee) 
+        {
+            employee_list = new Employee*[alloc_employee];
+            current_employee  = 0;
+        }
+
+        void add_employee(Employee* employee)
+        {
+
+            employee_list[current_employee] = employee;
+            current_employee ++;
+        }
+
+        int current_employee_num(){return current_employee;}
+
+        void print_employee_info()
+        {
+            int total_pay= 0;
+            for(int i=0;i<current_employee ; i++)
+            {
+                employee_list[i] -> print_info();
+                total_pay += employee_list[i]->cal_pay();
+                /*
+
+                    같은 함수를 호출했음에도 다르게 동작한다.
+                    이를 polymorphism 이라고 한다.
+
+                */
+            }
+
+            cout << "total pay : " << total_pay << endl;
+        }
+
+        ~EmployeeList()
+        {
+            for(int i=0; i<current_employee; i++)
+            {
+                delete employee_list[i];
+            }
+
+            delete[] employee_list;
+        }
+};
+
+
+int main()
+{
+
+    EmployeeList emp_list(10);
+    emp_list.add_employee(new Employee("zeus",21,"top" , 1));
+    emp_list.add_employee(new Employee("oner" , 20 , "jg",2));
+    emp_list.add_employee(new Employee("faker" , 27, "mid", 10));
+    emp_list.add_employee(new Employee("gumayusi" , 21, "adc", 5));
+    emp_list.add_employee(new Employee("keria" , 23 , "sup", 4));
+    emp_list.add_employee(new Manage("Teddy" , 23, "adc" , 4,10));
+    cout <<emp_list.current_employee_num() << endl;
+
+    emp_list.print_employee_info();
+
+    return 0;
+
+
+}
+
+/*
+is-a
+Manager는 Employee의 모든 기능을 포함한다
+
+즉 "Manager" is a "Employee"
+
+Manager -> Employee
+
+상속을 하면 구체화된다.
+반대로 올라가면 일반화된다.
+
+has-a
+
+Employee : Employee를 가지고있다
+ - Employee ** employee_list
+
+*/
